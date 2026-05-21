@@ -531,6 +531,9 @@ public class Board : MonoBehaviour
         PlayerPrefs.SetInt("LevelCompleted_" + currentLevel, 1);
         PlayerPrefs.Save();
 
+        // Buat dan tampilkan tombol Next Level secara dinamis dan responsif
+        CreateNextLevelButton();
+
         levelCompletePanel.SetActive(true);
         gameUIPanel.SetActive(true);
     }
@@ -1434,5 +1437,188 @@ public class Board : MonoBehaviour
         UpdateUI();
 
         Debug.Log("Semua progress level berhasil direset!");
+    }
+
+    // --- FITUR TOMBOL NEXT LEVEL PROGRAMMATIC & DYNAMIC ---
+
+    private void CreateNextLevelButton()
+    {
+        if (levelCompletePanel == null) return;
+        
+        // Hanya buat jika level saat ini kurang dari 10 (karena level 10 adalah level terakhir)
+        if (currentLevel >= 10)
+        {
+            Transform existing = levelCompletePanel.transform.Find("NextLevelButton");
+            if (existing != null) existing.gameObject.SetActive(false);
+            return;
+        }
+
+        // Cari atau buat tombol NextLevelButton
+        Transform btnTransform = levelCompletePanel.transform.Find("NextLevelButton");
+        GameObject btnObj;
+        Button nextBtn;
+
+        if (btnTransform == null)
+        {
+            btnObj = new GameObject("NextLevelButton");
+            btnObj.transform.SetParent(levelCompletePanel.transform, false);
+            nextBtn = btnObj.AddComponent<Button>();
+        }
+        else
+        {
+            btnObj = btnTransform.gameObject;
+            btnObj.SetActive(true);
+            nextBtn = btnObj.GetComponent<Button>();
+        }
+
+        // Ambil font & material dari scoreText agar seragam
+        TMP_FontAsset customFont = null;
+        Material customMaterial = null;
+        if (scoreText != null)
+        {
+            customFont = scoreText.font;
+            customMaterial = scoreText.fontSharedMaterial;
+        }
+
+        // Atur posisi & ukuran tombol Next Level secara dinamis & premium
+        RectTransform rect = btnObj.GetComponent<RectTransform>();
+        if (rect == null) rect = btnObj.AddComponent<RectTransform>();
+
+        // Ambil info rasio layar
+        float aspect = (float)Screen.width / Screen.height;
+        float btnWidth = aspect < 1.0f ? 360f : 300f;
+        float btnHeight = aspect < 1.0f ? 100f : 80f;
+        float fontSize = aspect < 1.0f ? 36f : 26f;
+
+        // Posisikan tombol Next Level sebagai aksi utama yang menonjol di tengah-bawah panel
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(0f, -80f); // Tepat di tengah, di atas tombol Restart/Home
+        rect.sizeDelta = new Vector2(btnWidth, btnHeight);
+
+        // Visual: Hijau Duolingo premium yang kontras & menarik perhatian pemain untuk lanjut
+        Image btnImg = btnObj.GetComponent<Image>();
+        if (btnImg == null) btnImg = btnObj.AddComponent<Image>();
+        btnImg.color = new Color(0.35f, 0.75f, 0.35f, 1f); // Hijau cerah premium
+
+        Outline outline = btnObj.GetComponent<Outline>();
+        if (outline == null) outline = btnObj.AddComponent<Outline>();
+        outline.effectColor = new Color(0.2f, 0.5f, 0.2f, 0.5f);
+        outline.effectDistance = new Vector2(3f, -3f);
+
+        // Atur transisi warna tombol
+        ColorBlock cb = nextBtn.colors;
+        cb.normalColor = new Color(0.35f, 0.75f, 0.35f, 1f);
+        cb.highlightedColor = new Color(0.4f, 0.85f, 0.4f, 1f);
+        cb.pressedColor = new Color(0.28f, 0.65f, 0.28f, 1f);
+        nextBtn.colors = cb;
+
+        // Buat atau update Teks Tombol
+        Transform textTrans = btnObj.transform.Find("ButtonText");
+        GameObject textObj;
+        TextMeshProUGUI textMesh;
+
+        if (textTrans == null)
+        {
+            textObj = new GameObject("ButtonText");
+            textObj.transform.SetParent(btnObj.transform, false);
+            textMesh = textObj.AddComponent<TextMeshProUGUI>();
+        }
+        else
+        {
+            textObj = textTrans.gameObject;
+            textMesh = textObj.GetComponent<TextMeshProUGUI>();
+        }
+
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        if (textRect == null) textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        if (customFont != null)
+        {
+            textMesh.font = customFont;
+            textMesh.fontSharedMaterial = customMaterial;
+        }
+        textMesh.text = "Level Berikutnya";
+        textMesh.fontSize = fontSize;
+        textMesh.fontStyle = FontStyles.Bold;
+        textMesh.color = Color.white;
+        textMesh.alignment = TextAlignmentOptions.Center;
+
+        // Tambahkan Event Listener
+        nextBtn.onClick.RemoveAllListeners();
+        nextBtn.onClick.AddListener(() => {
+            // Sembunyikan panel selesai
+            levelCompletePanel.SetActive(false);
+            // Mulai level berikutnya!
+            StartLevel(currentLevel + 1);
+        });
+
+        // Reposisi otomatis tombol Restart & Home agar layout terlihat rapi & seimbang!
+        RepositionCompletePanelButtons(rect.anchoredPosition.y, btnHeight);
+    }
+
+    private void RepositionCompletePanelButtons(float nextBtnY, float nextBtnHeight)
+    {
+        // Temukan semua Button anak dari levelCompletePanel yang bukan NextLevelButton
+        Button[] buttons = levelCompletePanel.GetComponentsInChildren<Button>(true);
+        List<RectTransform> otherButtons = new List<RectTransform>();
+
+        foreach (Button btn in buttons)
+        {
+            if (btn.name != "NextLevelButton")
+            {
+                RectTransform r = btn.GetComponent<RectTransform>();
+                if (r != null)
+                {
+                    otherButtons.Add(r);
+                }
+            }
+        }
+
+        // Jika ada tombol lain (biasanya 2: Restart dan Home)
+        if (otherButtons.Count > 0)
+        {
+            // Deteksi rasio layar
+            float aspect = (float)Screen.width / Screen.height;
+
+            if (otherButtons.Count == 2)
+            {
+                // Letakkan Restart dan Home bersisian secara horizontal di bawah tombol Next Level
+                RectTransform btnLeft = otherButtons[0];
+                RectTransform btnRight = otherButtons[1];
+
+                // Atur agar ukuran mereka seragam dan diletakkan berdampingan
+                float spacing = aspect < 1.0f ? 200f : 160f;
+                float sideBtnY = nextBtnY - nextBtnHeight - (aspect < 1.0f ? 60f : 40f);
+
+                btnLeft.anchorMin = new Vector2(0.5f, 0.5f);
+                btnLeft.anchorMax = new Vector2(0.5f, 0.5f);
+                btnLeft.pivot = new Vector2(0.5f, 0.5f);
+                btnLeft.anchoredPosition = new Vector2(-spacing / 2f, sideBtnY);
+
+                btnRight.anchorMin = new Vector2(0.5f, 0.5f);
+                btnRight.anchorMax = new Vector2(0.5f, 0.5f);
+                btnRight.pivot = new Vector2(0.5f, 0.5f);
+                btnRight.anchoredPosition = new Vector2(spacing / 2f, sideBtnY);
+            }
+            else
+            {
+                // Jika hanya ada 1 tombol lain atau lebih dari 2, susun secara vertikal di bawah
+                float currentY = nextBtnY - nextBtnHeight - 40f;
+                foreach (RectTransform r in otherButtons)
+                {
+                    r.anchorMin = new Vector2(0.5f, 0.5f);
+                    r.anchorMax = new Vector2(0.5f, 0.5f);
+                    r.pivot = new Vector2(0.5f, 0.5f);
+                    r.anchoredPosition = new Vector2(0f, currentY);
+                    currentY -= (r.sizeDelta.y + 20f);
+                }
+            }
+        }
     }
 }
