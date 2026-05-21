@@ -470,14 +470,19 @@ public class Board : MonoBehaviour
 
     void UpdateUI()
     {
-        scoreText.text = "Score: " + score;
+        if (scoreText != null)
+            scoreText.text = "Score: " + score;
 
-        if (isEndlessMode)
-            moveText.text = "Moves: ∞";
-        else
-            moveText.text = "Moves: " + moves;
+        if (moveText != null)
+        {
+            if (isEndlessMode)
+                moveText.text = "Moves: ∞";
+            else
+                moveText.text = "Moves: " + moves;
+        }
 
-        timerText.text = "Time: " + Mathf.CeilToInt(timeLeft);
+        if (timerText != null)
+            timerText.text = "Time: " + Mathf.CeilToInt(timeLeft);
 
         if (levelInfoText != null)
         {

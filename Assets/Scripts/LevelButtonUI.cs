@@ -43,6 +43,17 @@ public class LevelButtonUI : MonoBehaviour
 
     public void UpdateUIState()
     {
+        if (button == null)
+        {
+            button = GetComponent<Button>();
+            if (button != null)
+            {
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(OnClickStartLevel);
+            }
+        }
+        if (button == null) return;
+
         if (board == null)
         {
             board = FindObjectOfType<Board>();
