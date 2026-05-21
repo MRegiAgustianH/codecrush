@@ -198,6 +198,12 @@ public class Board : MonoBehaviour
     // Menampilkan popup konfirmasi ulangi jika level sudah selesai secara responsive & dynamic
     public void ShowReplayConfirmation(int level)
     {
+        // Cegah munculnya popup ganda jika popup sudah terbuka!
+        if (GameObject.Find("ReplayConfirmOverlay") != null)
+        {
+            return;
+        }
+
         Canvas canvas = FindObjectOfType<Canvas>();
         if (canvas == null)
         {
@@ -480,6 +486,8 @@ public class Board : MonoBehaviour
 
     void GameOver()
     {
+        if (!isGameStarted) return;
+
         isGameStarted = false;
         isProcessing = false;
 
@@ -503,6 +511,8 @@ public class Board : MonoBehaviour
 
     void LevelComplete()
     {
+        if (!isGameStarted) return;
+
         isGameStarted = false;
         isProcessing = false;
 
