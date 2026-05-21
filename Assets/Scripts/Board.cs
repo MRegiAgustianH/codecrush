@@ -192,6 +192,205 @@ public class Board : MonoBehaviour
         StartGame();
     }
 
+    // Menampilkan popup konfirmasi ulangi jika level sudah selesai secara responsive & dynamic
+    public void ShowReplayConfirmation(int level)
+    {
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas == null)
+        {
+            StartLevel(level);
+            return;
+        }
+
+        TMP_FontAsset customFont = null;
+        Material customMaterial = null;
+        if (scoreText != null)
+        {
+            customFont = scoreText.font;
+            customMaterial = scoreText.fontSharedMaterial;
+        }
+
+        // Deteksi rasio layar untuk skala ukuran popup yang pas
+        float aspect = (float)Screen.width / Screen.height;
+        float cardWidth = aspect < 1.0f ? 700f : 600f;
+        float cardHeight = aspect < 1.0f ? 400f : 350f;
+        float titleFontSize = aspect < 1.0f ? 48f : 36f;
+        float descFontSize = aspect < 1.0f ? 34f : 24f;
+        float buttonFontSize = aspect < 1.0f ? 34f : 24f;
+
+        // 1. Overlay Background (Blokir input di belakang)
+        GameObject overlayObj = new GameObject("ReplayConfirmOverlay");
+        overlayObj.transform.SetParent(canvas.transform, false);
+        
+        RectTransform overlayRect = overlayObj.AddComponent<RectTransform>();
+        overlayRect.anchorMin = Vector2.zero;
+        overlayRect.anchorMax = Vector2.one;
+        overlayRect.offsetMin = Vector2.zero;
+        overlayRect.offsetMax = Vector2.zero;
+
+        Image overlayImg = overlayObj.AddComponent<Image>();
+        overlayImg.color = new Color(0f, 0f, 0f, 0.75f); // Hitam transparan premium
+
+        CanvasGroup overlayGroup = overlayObj.AddComponent<CanvasGroup>();
+        overlayGroup.blocksRaycasts = true;
+
+        // 2. Pop-up Card Box
+        GameObject cardObj = new GameObject("ConfirmCard");
+        cardObj.transform.SetParent(overlayObj.transform, false);
+        
+        RectTransform cardRect = cardObj.AddComponent<RectTransform>();
+        cardRect.anchorMin = new Vector2(0.5f, 0.5f);
+        cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+        cardRect.sizeDelta = new Vector2(cardWidth, cardHeight);
+        cardRect.pivot = new Vector2(0.5f, 0.5f);
+
+        Image cardImg = cardObj.AddComponent<Image>();
+        cardImg.color = new Color(0.12f, 0.12f, 0.16f, 1f); // Dark theme premium
+        
+        Outline cardOutline = cardObj.AddComponent<Outline>();
+        cardOutline.effectColor = new Color(0.6f, 0.4f, 0.9f, 0.6f); // Glow ungu Duolingo
+        cardOutline.effectDistance = new Vector2(4f, 4f);
+
+        // 3. Judul Pop-up ("Level Selesai")
+        GameObject titleObj = new GameObject("TitleText");
+        titleObj.transform.SetParent(cardObj.transform, false);
+        RectTransform titleRect = titleObj.AddComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0f, 0.65f);
+        titleRect.anchorMax = new Vector2(1f, 0.9f);
+        titleRect.offsetMin = new Vector2(20f, 0f);
+        titleRect.offsetMax = new Vector2(-20f, 0f);
+
+        TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            titleText.font = customFont;
+            titleText.fontSharedMaterial = customMaterial;
+        }
+        titleText.text = "Level Selesai";
+        titleText.fontSize = titleFontSize;
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.color = Color.white;
+        titleText.alignment = TextAlignmentOptions.Center;
+
+        // 4. Deskripsi Pertanyaan ("Ingin Ulangi?")
+        GameObject descObj = new GameObject("DescText");
+        descObj.transform.SetParent(cardObj.transform, false);
+        RectTransform descRect = descObj.AddComponent<RectTransform>();
+        descRect.anchorMin = new Vector2(0f, 0.38f);
+        descRect.anchorMax = new Vector2(1f, 0.62f);
+        descRect.offsetMin = new Vector2(20f, 0f);
+        descRect.offsetMax = new Vector2(-20f, 0f);
+
+        TextMeshProUGUI descText = descObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            descText.font = customFont;
+            descText.fontSharedMaterial = customMaterial;
+        }
+        descText.text = "Ingin mainkan kembali level " + level + "?";
+        descText.fontSize = descFontSize;
+        descText.color = new Color(0.85f, 0.85f, 0.9f, 1f);
+        descText.alignment = TextAlignmentOptions.Center;
+
+        // 5. Tombol Ulangi (Play Again)
+        GameObject playBtnObj = new GameObject("ReplayPlayButton");
+        playBtnObj.transform.SetParent(cardObj.transform, false);
+        RectTransform playBtnRect = playBtnObj.AddComponent<RectTransform>();
+        playBtnRect.anchorMin = new Vector2(0.08f, 0.08f);
+        playBtnRect.anchorMax = new Vector2(0.48f, 0.3f);
+        playBtnRect.offsetMin = Vector2.zero;
+        playBtnRect.offsetMax = Vector2.zero;
+
+        Image playBtnImg = playBtnObj.AddComponent<Image>();
+        playBtnImg.color = new Color(0.6f, 0.4f, 0.9f, 1f); // Ungu Duolingo
+        
+        Button playBtn = playBtnObj.AddComponent<Button>();
+        
+        GameObject playTextObj = new GameObject("PlayText");
+        playTextObj.transform.SetParent(playBtnObj.transform, false);
+        RectTransform playTextRect = playTextObj.AddComponent<RectTransform>();
+        playTextRect.anchorMin = Vector2.zero;
+        playTextRect.anchorMax = Vector2.one;
+        playTextRect.offsetMin = Vector2.zero;
+        playTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI playText = playTextObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            playText.font = customFont;
+            playText.fontSharedMaterial = customMaterial;
+        }
+        playText.text = "Ulangi";
+        playText.fontSize = buttonFontSize;
+        playText.fontStyle = FontStyles.Bold;
+        playText.color = Color.white;
+        playText.alignment = TextAlignmentOptions.Center;
+
+        playBtn.onClick.AddListener(() => {
+            Destroy(overlayObj);
+            StartLevel(level);
+        });
+
+        // 6. Tombol Batal (Cancel)
+        GameObject cancelBtnObj = new GameObject("ReplayCancelButton");
+        cancelBtnObj.transform.SetParent(cardObj.transform, false);
+        RectTransform cancelBtnRect = cancelBtnObj.AddComponent<RectTransform>();
+        cancelBtnRect.anchorMin = new Vector2(0.52f, 0.08f);
+        cancelBtnRect.anchorMax = new Vector2(0.92f, 0.3f);
+        cancelBtnRect.offsetMin = Vector2.zero;
+        cancelBtnRect.offsetMax = Vector2.zero;
+
+        Image cancelBtnImg = cancelBtnObj.AddComponent<Image>();
+        cancelBtnImg.color = new Color(0.3f, 0.3f, 0.35f, 1f);
+        
+        Button cancelBtn = cancelBtnObj.AddComponent<Button>();
+        
+        GameObject cancelTextObj = new GameObject("CancelText");
+        cancelTextObj.transform.SetParent(cancelBtnObj.transform, false);
+        RectTransform cancelTextRect = cancelTextObj.AddComponent<RectTransform>();
+        cancelTextRect.anchorMin = Vector2.zero;
+        cancelTextRect.anchorMax = Vector2.one;
+        cancelTextRect.offsetMin = Vector2.zero;
+        cancelTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI cancelText = cancelTextObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            cancelText.font = customFont;
+            cancelText.fontSharedMaterial = customMaterial;
+        }
+        cancelText.text = "Batal";
+        cancelText.fontSize = buttonFontSize;
+        cancelText.fontStyle = FontStyles.Bold;
+        cancelText.color = Color.white;
+        cancelText.alignment = TextAlignmentOptions.Center;
+
+        cancelBtn.onClick.AddListener(() => {
+            Destroy(overlayObj);
+        });
+
+        // Animasi masuk scale yang halus (Pop-up Effect)
+        cardObj.transform.localScale = Vector3.zero;
+        StartCoroutine(AnimateCardScaleUp(cardObj.transform));
+    }
+
+    IEnumerator AnimateCardScaleUp(Transform cardTransform)
+    {
+        float elapsed = 0f;
+        float duration = 0.18f;
+        while (elapsed < duration)
+        {
+            if (cardTransform == null) yield break;
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float scale = Mathf.Lerp(0f, 1f, t * t * (3f - 2f * t)); // Elastic Ease Out
+            cardTransform.localScale = new Vector3(scale, scale, 1f);
+            yield return null;
+        }
+        if (cardTransform != null)
+            cardTransform.localScale = Vector3.one;
+    }
+
     // Fungsi pembantu untuk mengecek apakah suatu level sudah diselesaikan
     public bool IsLevelCompleted(int levelNum)
     {

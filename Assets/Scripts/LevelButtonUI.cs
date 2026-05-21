@@ -80,7 +80,14 @@ public class LevelButtonUI : MonoBehaviour
     {
         if (board != null)
         {
-            board.StartLevel(levelNumber);
+            if (board.IsLevelCompleted(levelNumber))
+            {
+                board.ShowReplayConfirmation(levelNumber);
+            }
+            else
+            {
+                board.StartLevel(levelNumber);
+            }
         }
     }
 }
