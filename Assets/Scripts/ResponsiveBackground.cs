@@ -10,6 +10,7 @@ public class ResponsiveBackground : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private int lastScreenWidth = 0;
     private int lastScreenHeight = 0;
+    private float lastOrthoSize = 0f;
 
     void Awake()
     {
@@ -23,8 +24,13 @@ public class ResponsiveBackground : MonoBehaviour
 
     void Update()
     {
-        // Deteksi jika ukuran layar berubah secara dinamis (seperti resize browser WebGL)
-        if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
+        Camera mainCam = Camera.main;
+        if (mainCam == null) return;
+
+        // Deteksi jika ukuran layar ATAU ukuran orthographic kamera berubah
+        if (Screen.width != lastScreenWidth || 
+            Screen.height != lastScreenHeight || 
+            !Mathf.Approximately(mainCam.orthographicSize, lastOrthoSize))
         {
             ScaleToFitScreen();
         }
@@ -66,5 +72,6 @@ public class ResponsiveBackground : MonoBehaviour
 
         lastScreenWidth = Screen.width;
         lastScreenHeight = Screen.height;
+        lastOrthoSize = mainCam.orthographicSize;
     }
 }
