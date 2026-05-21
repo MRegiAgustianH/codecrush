@@ -208,7 +208,6 @@ public class Board : MonoBehaviour
     // Menampilkan popup konfirmasi ulangi jika level sudah selesai secara responsive & dynamic
     public void ShowReplayConfirmation(int level)
     {
-        // Cegah munculnya popup ganda jika popup sudah terbuka!
         if (GameObject.Find("ReplayConfirmOverlay") != null)
         {
             return;
@@ -229,7 +228,6 @@ public class Board : MonoBehaviour
             customMaterial = scoreText.fontSharedMaterial;
         }
 
-        // Deteksi rasio layar untuk skala ukuran popup yang pas
         float aspect = (float)Screen.width / Screen.height;
         float cardWidth = aspect < 1.0f ? 700f : 600f;
         float cardHeight = aspect < 1.0f ? 400f : 350f;
@@ -237,7 +235,7 @@ public class Board : MonoBehaviour
         float descFontSize = aspect < 1.0f ? 34f : 24f;
         float buttonFontSize = aspect < 1.0f ? 34f : 24f;
 
-        // 1. Overlay Background (Blokir input di belakang)
+        // 1. Overlay Background
         GameObject overlayObj = new GameObject("ReplayConfirmOverlay");
         overlayObj.transform.SetParent(canvas.transform, false);
         
@@ -248,7 +246,7 @@ public class Board : MonoBehaviour
         overlayRect.offsetMax = Vector2.zero;
 
         Image overlayImg = overlayObj.AddComponent<Image>();
-        overlayImg.color = new Color(0f, 0f, 0f, 0.75f); // Hitam transparan premium
+        overlayImg.color = new Color(0f, 0f, 0f, 0.75f);
 
         CanvasGroup overlayGroup = overlayObj.AddComponent<CanvasGroup>();
         overlayGroup.blocksRaycasts = true;
@@ -264,13 +262,13 @@ public class Board : MonoBehaviour
         cardRect.pivot = new Vector2(0.5f, 0.5f);
 
         Image cardImg = cardObj.AddComponent<Image>();
-        cardImg.color = new Color(0.12f, 0.12f, 0.16f, 1f); // Dark theme premium
+        cardImg.color = new Color(0.12f, 0.12f, 0.16f, 1f);
         
         Outline cardOutline = cardObj.AddComponent<Outline>();
-        cardOutline.effectColor = new Color(0.6f, 0.4f, 0.9f, 0.6f); // Glow ungu Duolingo
+        cardOutline.effectColor = new Color(0.6f, 0.4f, 0.9f, 0.6f);
         cardOutline.effectDistance = new Vector2(4f, 4f);
 
-        // 3. Judul Pop-up ("Level Selesai")
+        // 3. Judul Pop-up
         GameObject titleObj = new GameObject("TitleText");
         titleObj.transform.SetParent(cardObj.transform, false);
         RectTransform titleRect = titleObj.AddComponent<RectTransform>();
@@ -291,7 +289,7 @@ public class Board : MonoBehaviour
         titleText.color = Color.white;
         titleText.alignment = TextAlignmentOptions.Center;
 
-        // 4. Deskripsi Pertanyaan ("Ingin Ulangi?")
+        // 4. Deskripsi Pertanyaan
         GameObject descObj = new GameObject("DescText");
         descObj.transform.SetParent(cardObj.transform, false);
         RectTransform descRect = descObj.AddComponent<RectTransform>();
@@ -311,7 +309,7 @@ public class Board : MonoBehaviour
         descText.color = new Color(0.85f, 0.85f, 0.9f, 1f);
         descText.alignment = TextAlignmentOptions.Center;
 
-        // 5. Tombol Ulangi (Play Again)
+        // 5. Tombol Ulangi
         GameObject playBtnObj = new GameObject("ReplayPlayButton");
         playBtnObj.transform.SetParent(cardObj.transform, false);
         RectTransform playBtnRect = playBtnObj.AddComponent<RectTransform>();
@@ -321,7 +319,7 @@ public class Board : MonoBehaviour
         playBtnRect.offsetMax = Vector2.zero;
 
         Image playBtnImg = playBtnObj.AddComponent<Image>();
-        playBtnImg.color = new Color(0.6f, 0.4f, 0.9f, 1f); // Ungu Duolingo
+        playBtnImg.color = new Color(0.6f, 0.4f, 0.9f, 1f);
         
         Button playBtn = playBtnObj.AddComponent<Button>();
         
@@ -350,7 +348,7 @@ public class Board : MonoBehaviour
             StartLevel(level);
         });
 
-        // 6. Tombol Batal (Cancel)
+        // 6. Tombol Batal
         GameObject cancelBtnObj = new GameObject("ReplayCancelButton");
         cancelBtnObj.transform.SetParent(cardObj.transform, false);
         RectTransform cancelBtnRect = cancelBtnObj.AddComponent<RectTransform>();
@@ -388,7 +386,7 @@ public class Board : MonoBehaviour
             Destroy(overlayObj);
         });
 
-        // Animasi masuk scale yang halus (Pop-up Effect)
+        // Animasi masuk scale
         cardObj.transform.localScale = Vector3.zero;
         StartCoroutine(AnimateCardScaleUp(cardObj.transform));
     }
@@ -1159,10 +1157,8 @@ public class Board : MonoBehaviour
     {
         if (levelSelectPanel == null) return;
 
-        // Cari apakah sudah ada tombol Reset di levelSelectPanel
         if (levelSelectPanel.transform.Find("ResetProgressButton") != null) return;
 
-        // Ambil font & material dari scoreText agar seragam
         TMP_FontAsset customFont = null;
         Material customMaterial = null;
         if (scoreText != null)
@@ -1171,42 +1167,36 @@ public class Board : MonoBehaviour
             customMaterial = scoreText.fontSharedMaterial;
         }
 
-        // Deteksi rasio layar untuk skala ukuran tombol yang pas
         float aspect = (float)Screen.width / Screen.height;
         float btnWidth = aspect < 1.0f ? 280f : 240f;
         float btnHeight = aspect < 1.0f ? 80f : 70f;
         float fontSize = aspect < 1.0f ? 30f : 22f;
 
-        // 1. Buat Game Object Tombol
         GameObject btnObj = new GameObject("ResetProgressButton");
         btnObj.transform.SetParent(levelSelectPanel.transform, false);
 
         RectTransform rect = btnObj.AddComponent<RectTransform>();
-        // Posisikan di pojok kanan atas dengan anchor
         rect.anchorMin = new Vector2(1f, 1f);
         rect.anchorMax = new Vector2(1f, 1f);
         rect.pivot = new Vector2(1f, 1f);
-        rect.anchoredPosition = new Vector2(-40f, -40f); // margin dari pojok kanan atas
+        rect.anchoredPosition = new Vector2(-40f, -40f);
         rect.sizeDelta = new Vector2(btnWidth, btnHeight);
 
         Image btnImg = btnObj.AddComponent<Image>();
-        btnImg.color = new Color(0.18f, 0.18f, 0.22f, 0.9f); // Dark background premium
+        btnImg.color = new Color(0.18f, 0.18f, 0.22f, 0.9f);
 
-        // Outline merah halus untuk tombol reset
         Outline outline = btnObj.AddComponent<Outline>();
         outline.effectColor = new Color(0.9f, 0.3f, 0.3f, 0.4f);
         outline.effectDistance = new Vector2(2f, 2f);
 
         Button button = btnObj.AddComponent<Button>();
         
-        // Atur efek transisi warna tombol
         ColorBlock cb = button.colors;
         cb.normalColor = new Color(0.18f, 0.18f, 0.22f, 0.9f);
         cb.highlightedColor = new Color(0.25f, 0.2f, 0.25f, 1f);
         cb.pressedColor = new Color(0.12f, 0.12f, 0.15f, 1f);
         button.colors = cb;
 
-        // 2. Buat Teks Tombol
         GameObject textObj = new GameObject("ButtonText");
         textObj.transform.SetParent(btnObj.transform, false);
 
@@ -1225,16 +1215,14 @@ public class Board : MonoBehaviour
         textMesh.text = "Reset Progress";
         textMesh.fontSize = fontSize;
         textMesh.fontStyle = FontStyles.Bold;
-        textMesh.color = new Color(0.95f, 0.4f, 0.4f, 1f); // Warna teks merah soft premium
+        textMesh.color = new Color(0.95f, 0.4f, 0.4f, 1f);
         textMesh.alignment = TextAlignmentOptions.Center;
 
-        // 3. Tambahkan Event Listener
         button.onClick.AddListener(ShowResetConfirmationPopup);
     }
 
     public void ShowResetConfirmationPopup()
     {
-        // Cegah munculnya popup ganda jika popup sudah terbuka!
         if (GameObject.Find("ResetConfirmOverlay") != null)
         {
             return;
@@ -1255,7 +1243,6 @@ public class Board : MonoBehaviour
             customMaterial = scoreText.fontSharedMaterial;
         }
 
-        // Deteksi rasio layar untuk skala ukuran popup yang pas
         float aspect = (float)Screen.width / Screen.height;
         float cardWidth = aspect < 1.0f ? 750f : 650f;
         float cardHeight = aspect < 1.0f ? 450f : 380f;
@@ -1263,7 +1250,7 @@ public class Board : MonoBehaviour
         float descFontSize = aspect < 1.0f ? 32f : 22f;
         float buttonFontSize = aspect < 1.0f ? 32f : 22f;
 
-        // 1. Overlay Background (Blokir input di belakang)
+        // 1. Overlay Background
         GameObject overlayObj = new GameObject("ResetConfirmOverlay");
         overlayObj.transform.SetParent(canvas.transform, false);
         
@@ -1274,7 +1261,7 @@ public class Board : MonoBehaviour
         overlayRect.offsetMax = Vector2.zero;
 
         Image overlayImg = overlayObj.AddComponent<Image>();
-        overlayImg.color = new Color(0f, 0f, 0f, 0.8f); // Hitam transparan premium pekat
+        overlayImg.color = new Color(0f, 0f, 0f, 0.8f);
 
         CanvasGroup overlayGroup = overlayObj.AddComponent<CanvasGroup>();
         overlayGroup.blocksRaycasts = true;
@@ -1290,13 +1277,13 @@ public class Board : MonoBehaviour
         cardRect.pivot = new Vector2(0.5f, 0.5f);
 
         Image cardImg = cardObj.AddComponent<Image>();
-        cardImg.color = new Color(0.12f, 0.12f, 0.16f, 1f); // Dark theme premium
+        cardImg.color = new Color(0.12f, 0.12f, 0.16f, 1f);
         
         Outline cardOutline = cardObj.AddComponent<Outline>();
-        cardOutline.effectColor = new Color(0.9f, 0.3f, 0.3f, 0.6f); // Glow merah soft (peringatan)
+        cardOutline.effectColor = new Color(0.9f, 0.3f, 0.3f, 0.6f);
         cardOutline.effectDistance = new Vector2(4f, 4f);
 
-        // 3. Judul Pop-up ("Reset Progress?")
+        // 3. Judul Pop-up
         GameObject titleObj = new GameObject("TitleText");
         titleObj.transform.SetParent(cardObj.transform, false);
         RectTransform titleRect = titleObj.AddComponent<RectTransform>();
@@ -1314,7 +1301,7 @@ public class Board : MonoBehaviour
         titleText.text = "Reset Progress?";
         titleText.fontSize = titleFontSize;
         titleText.fontStyle = FontStyles.Bold;
-        titleText.color = new Color(0.95f, 0.35f, 0.35f, 1f); // Merah warning
+        titleText.color = new Color(0.95f, 0.35f, 0.35f, 1f);
         titleText.alignment = TextAlignmentOptions.Center;
 
         // 4. Deskripsi Pertanyaan
@@ -1337,7 +1324,7 @@ public class Board : MonoBehaviour
         descText.color = new Color(0.85f, 0.85f, 0.9f, 1f);
         descText.alignment = TextAlignmentOptions.Center;
 
-        // 5. Tombol Reset (Konfirmasi)
+        // 5. Tombol Reset
         GameObject resetBtnObj = new GameObject("ConfirmResetButton");
         resetBtnObj.transform.SetParent(cardObj.transform, false);
         RectTransform resetBtnRect = resetBtnObj.AddComponent<RectTransform>();
@@ -1347,7 +1334,7 @@ public class Board : MonoBehaviour
         resetBtnRect.offsetMax = Vector2.zero;
 
         Image resetBtnImg = resetBtnObj.AddComponent<Image>();
-        resetBtnImg.color = new Color(0.85f, 0.3f, 0.3f, 1f); // Merah terang premium
+        resetBtnImg.color = new Color(0.85f, 0.3f, 0.3f, 1f);
         
         Button resetBtn = resetBtnObj.AddComponent<Button>();
         
@@ -1376,7 +1363,7 @@ public class Board : MonoBehaviour
             ResetAllProgress();
         });
 
-        // 6. Tombol Batal (Cancel)
+        // 6. Tombol Batal
         GameObject cancelBtnObj = new GameObject("CancelResetButton");
         cancelBtnObj.transform.SetParent(cardObj.transform, false);
         RectTransform cancelBtnRect = cancelBtnObj.AddComponent<RectTransform>();
@@ -1414,14 +1401,12 @@ public class Board : MonoBehaviour
             Destroy(overlayObj);
         });
 
-        // Animasi masuk scale yang halus (Pop-up Effect)
         cardObj.transform.localScale = Vector3.zero;
         StartCoroutine(AnimateCardScaleUp(cardObj.transform));
     }
 
     public void ResetAllProgress()
     {
-        // Hapus semua data progress level 1 sampai 10
         for (int i = 1; i <= 10; i++)
         {
             PlayerPrefs.DeleteKey("LevelCompleted_" + i);
@@ -1429,7 +1414,6 @@ public class Board : MonoBehaviour
         PlayerPrefs.DeleteKey("HighScore");
         PlayerPrefs.Save();
 
-        // Refresh status visual semua Level Button UI
         LevelButtonUI[] levelButtons = FindObjectsOfType<LevelButtonUI>(true);
         foreach (LevelButtonUI btn in levelButtons)
         {
@@ -1439,7 +1423,6 @@ public class Board : MonoBehaviour
             }
         }
 
-        // Refresh UI skor
         UpdateUI();
 
         Debug.Log("Semua progress level berhasil direset!");
@@ -1451,7 +1434,6 @@ public class Board : MonoBehaviour
     {
         if (levelCompletePanel == null) return;
         
-        // Hanya buat jika level saat ini kurang dari 10 (karena level 10 adalah level terakhir)
         if (currentLevel >= 10)
         {
             Transform existing = levelCompletePanel.transform.Find("NextLevelButton");
@@ -1459,7 +1441,6 @@ public class Board : MonoBehaviour
             return;
         }
 
-        // Cari atau buat tombol NextLevelButton
         Transform btnTransform = levelCompletePanel.transform.Find("NextLevelButton");
         GameObject btnObj;
         Button nextBtn;
@@ -1477,7 +1458,6 @@ public class Board : MonoBehaviour
             nextBtn = btnObj.GetComponent<Button>();
         }
 
-        // Ambil font & material dari scoreText agar seragam
         TMP_FontAsset customFont = null;
         Material customMaterial = null;
         if (scoreText != null)
@@ -1486,41 +1466,35 @@ public class Board : MonoBehaviour
             customMaterial = scoreText.fontSharedMaterial;
         }
 
-        // Atur posisi & ukuran tombol Next Level secara dinamis & premium
         RectTransform rect = btnObj.GetComponent<RectTransform>();
         if (rect == null) rect = btnObj.AddComponent<RectTransform>();
 
-        // Ambil info rasio layar
         float aspect = (float)Screen.width / Screen.height;
         float btnWidth = aspect < 1.0f ? 360f : 300f;
         float btnHeight = aspect < 1.0f ? 100f : 80f;
         float fontSize = aspect < 1.0f ? 36f : 26f;
 
-        // Posisikan tombol Next Level sebagai aksi utama yang menonjol di tengah-bawah panel
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(0f, -100f); // Geser sedikit ke bawah (-100f) agar ada jarak dari teks LEVEL COMPLETE
+        rect.anchoredPosition = new Vector2(0f, -100f);
         rect.sizeDelta = new Vector2(btnWidth, btnHeight);
 
-        // Visual: Hijau Duolingo premium yang kontras & menarik perhatian pemain untuk lanjut
         Image btnImg = btnObj.GetComponent<Image>();
         if (btnImg == null) btnImg = btnObj.AddComponent<Image>();
-        btnImg.color = new Color(0.35f, 0.75f, 0.35f, 1f); // Hijau cerah premium
+        btnImg.color = new Color(0.35f, 0.75f, 0.35f, 1f);
 
         Outline outline = btnObj.GetComponent<Outline>();
         if (outline == null) outline = btnObj.AddComponent<Outline>();
         outline.effectColor = new Color(0.2f, 0.5f, 0.2f, 0.5f);
         outline.effectDistance = new Vector2(3f, -3f);
 
-        // Atur transisi warna tombol
         ColorBlock cb = nextBtn.colors;
         cb.normalColor = new Color(0.35f, 0.75f, 0.35f, 1f);
         cb.highlightedColor = new Color(0.4f, 0.85f, 0.4f, 1f);
         cb.pressedColor = new Color(0.28f, 0.65f, 0.28f, 1f);
         nextBtn.colors = cb;
 
-        // Buat atau update Teks Tombol
         Transform textTrans = btnObj.transform.Find("ButtonText");
         GameObject textObj;
         TextMeshProUGUI textMesh;
@@ -1555,25 +1529,19 @@ public class Board : MonoBehaviour
         textMesh.color = Color.white;
         textMesh.alignment = TextAlignmentOptions.Center;
 
-        // Tambahkan Event Listener
         nextBtn.onClick.RemoveAllListeners();
         nextBtn.onClick.AddListener(() => {
-            // Sembunyikan panel selesai
             levelCompletePanel.SetActive(false);
-            // Mulai level berikutnya!
             StartLevel(currentLevel + 1);
         });
 
-        // Reposisi otomatis tombol Restart & Home agar layout terlihat rapi & seimbang!
         RepositionCompletePanelButtons(rect.anchoredPosition.y, btnHeight);
     }
 
     private void RepositionCompletePanelButtons(float nextBtnY, float nextBtnHeight)
     {
-        // Temukan semua Button anak dari levelCompletePanel yang bukan NextLevelButton
         Button[] buttons = levelCompletePanel.GetComponentsInChildren<Button>(true);
 
-        // Simpan posisi asli tombol jika belum ada di dictionary cache
         foreach (Button btn in buttons)
         {
             if (btn.name != "NextLevelButton")
@@ -1586,8 +1554,6 @@ public class Board : MonoBehaviour
             }
         }
 
-        // Kembalikan ke posisi asli terlebih dahulu, lalu geser ke bawah secara vertikal (sumbu Y)
-        // Hal ini menjaga posisi horizontal (sumbu X), lebar, dan tinggi tombol tetap seperti semula di editor
         foreach (Button btn in buttons)
         {
             if (btn.name != "NextLevelButton")
@@ -1596,8 +1562,6 @@ public class Board : MonoBehaviour
                 if (r != null && originalButtonPositions.ContainsKey(btn.name))
                 {
                     Vector2 originalPos = originalButtonPositions[btn.name];
-                    // Geser ke bawah sejauh 140 unit dari posisi aslinya agar memberikan ruang
-                    // yang pas dan rapi tanpa menimpa atau menempel tombol Next Level
                     r.anchoredPosition = new Vector2(originalPos.x, originalPos.y - 140f);
                 }
             }
