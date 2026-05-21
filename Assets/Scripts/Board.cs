@@ -42,6 +42,7 @@ public class Board : MonoBehaviour
     private int comboCount = 0;
     private int lastScreenWidth = 0;
     private int lastScreenHeight = 0;
+    private Dictionary<string, Vector2> originalButtonPositions = new Dictionary<string, Vector2>();
 
     void Awake()
     {
@@ -1494,7 +1495,7 @@ public class Board : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(0f, -80f); // Tepat di tengah, di atas tombol Restart/Home
+        rect.anchoredPosition = new Vector2(0f, -100f); // Geser sedikit ke bawah (-100f) agar ada jarak dari teks LEVEL COMPLETE
         rect.sizeDelta = new Vector2(btnWidth, btnHeight);
 
         // Visual: Hijau Duolingo premium yang kontras & menarik perhatian pemain untuk lanjut
@@ -1566,57 +1567,33 @@ public class Board : MonoBehaviour
     {
         // Temukan semua Button anak dari levelCompletePanel yang bukan NextLevelButton
         Button[] buttons = levelCompletePanel.GetComponentsInChildren<Button>(true);
-        List<RectTransform> otherButtons = new List<RectTransform>();
 
+        // Simpan posisi asli tombol jika belum ada di dictionary cache
         foreach (Button btn in buttons)
         {
             if (btn.name != "NextLevelButton")
             {
                 RectTransform r = btn.GetComponent<RectTransform>();
-                if (r != null)
+                if (r != null && !originalButtonPositions.ContainsKey(btn.name))
                 {
-                    otherButtons.Add(r);
+                    originalButtonPositions[btn.name] = r.anchoredPosition;
                 }
             }
         }
 
-        // Jika ada tombol lain (biasanya 2: Restart dan Home)
-        if (otherButtons.Count > 0)
+        // Kembalikan ke posisi asli terlebih dahulu, lalu geser ke bawah secara vertikal (sumbu Y)
+        // Hal ini menjaga posisi horizontal (sumbu X), lebar, dan tinggi tombol tetap seperti semula di editor
+        foreach (Button btn in buttons)
         {
-            // Deteksi rasio layar
-            float aspect = (float)Screen.width / Screen.height;
-
-            if (otherButtons.Count == 2)
+            if (btn.name != "NextLevelButton")
             {
-                // Letakkan Restart dan Home bersisian secara horizontal di bawah tombol Next Level
-                RectTransform btnLeft = otherButtons[0];
-                RectTransform btnRight = otherButtons[1];
-
-                // Atur agar ukuran mereka seragam dan diletakkan berdampingan
-                float spacing = aspect < 1.0f ? 200f : 160f;
-                float sideBtnY = nextBtnY - nextBtnHeight - (aspect < 1.0f ? 60f : 40f);
-
-                btnLeft.anchorMin = new Vector2(0.5f, 0.5f);
-                btnLeft.anchorMax = new Vector2(0.5f, 0.5f);
-                btnLeft.pivot = new Vector2(0.5f, 0.5f);
-                btnLeft.anchoredPosition = new Vector2(-spacing / 2f, sideBtnY);
-
-                btnRight.anchorMin = new Vector2(0.5f, 0.5f);
-                btnRight.anchorMax = new Vector2(0.5f, 0.5f);
-                btnRight.pivot = new Vector2(0.5f, 0.5f);
-                btnRight.anchoredPosition = new Vector2(spacing / 2f, sideBtnY);
-            }
-            else
-            {
-                // Jika hanya ada 1 tombol lain atau lebih dari 2, susun secara vertikal di bawah
-                float currentY = nextBtnY - nextBtnHeight - 40f;
-                foreach (RectTransform r in otherButtons)
+                RectTransform r = btn.GetComponent<RectTransform>();
+                if (r != null && originalButtonPositions.ContainsKey(btn.name))
                 {
-                    r.anchorMin = new Vector2(0.5f, 0.5f);
-                    r.anchorMax = new Vector2(0.5f, 0.5f);
-                    r.pivot = new Vector2(0.5f, 0.5f);
-                    r.anchoredPosition = new Vector2(0f, currentY);
-                    currentY -= (r.sizeDelta.y + 20f);
+                    Vector2 originalPos = originalButtonPositions[btn.name];
+                    // Geser ke bawah sejauh 140 unit dari posisi aslinya agar memberikan ruang
+                    // yang pas dan rapi tanpa menimpa atau menempel tombol Next Level
+                    r.anchoredPosition = new Vector2(originalPos.x, originalPos.y - 140f);
                 }
             }
         }
