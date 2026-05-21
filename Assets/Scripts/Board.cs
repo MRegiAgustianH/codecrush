@@ -109,47 +109,96 @@ public class Board : MonoBehaviour
         StartGame();
     }
 
-    public void StartLevel1()
+    public void StartLevelFromUI(int level)
     {
-        StartLevel(1);
+        StartLevel(level);
     }
 
-    public void StartLevel2()
-    {
-        StartLevel(2);
-    }
-
-    public void StartLevel3()
-    {
-        StartLevel(3);
-    }
-
-    void StartLevel(int level)
+    // Fungsi pembantu untuk memanggil Level 1 sampai 10 secara terpusat
+    public void StartLevel(int level)
     {
         isEndlessMode = false;
         currentLevel = level;
 
-        if (level == 1)
+        // Setelan spesifik untuk 10 Level dengan progresi tingkat kesulitan
+        switch (level)
         {
-            moves = 20;
-            timeLeft = 60;
-            targetScore = 300;
-        }
-        else if (level == 2)
-        {
-            moves = 18;
-            timeLeft = 55;
-            targetScore = 500;
-        }
-        else if (level == 3)
-        {
-            moves = 15;
-            timeLeft = 45;
-            targetScore = 700;
+            case 1:
+                moves = 20;
+                timeLeft = 60f;
+                targetScore = 300;
+                break;
+            case 2:
+                moves = 18;
+                timeLeft = 55f;
+                targetScore = 450;
+                break;
+            case 3:
+                moves = 16;
+                timeLeft = 50f;
+                targetScore = 600;
+                break;
+            case 4:
+                moves = 15;
+                timeLeft = 45f;
+                targetScore = 750;
+                break;
+            case 5:
+                moves = 14;
+                timeLeft = 45f;
+                targetScore = 900;
+                break;
+            case 6:
+                moves = 13;
+                timeLeft = 40f;
+                targetScore = 1100;
+                break;
+            case 7:
+                moves = 12;
+                timeLeft = 40f;
+                targetScore = 1300;
+                break;
+            case 8:
+                moves = 12;
+                timeLeft = 35f;
+                targetScore = 1500;
+                break;
+            case 9:
+                moves = 10;
+                timeLeft = 30f;
+                targetScore = 1800;
+                break;
+            case 10:
+                moves = 10;
+                timeLeft = 30f;
+                targetScore = 2200;
+                break;
+            default:
+                // Fallback default jika di luar 1-10
+                moves = 15;
+                timeLeft = 45f;
+                targetScore = 1000;
+                break;
         }
 
         score = 0;
         StartGame();
+    }
+
+    // Fungsi pembantu untuk mengecek apakah suatu level sudah diselesaikan
+    public bool IsLevelCompleted(int levelNum)
+    {
+        return PlayerPrefs.GetInt("LevelCompleted_" + levelNum, 0) == 1;
+    }
+
+    // Fungsi pembantu untuk mengecek apakah suatu level terbuka (unlocked)
+    public bool IsLevelUnlocked(int levelNum)
+    {
+        // Level 1 selalu terbuka
+        if (levelNum == 1) return true;
+        
+        // Level lainnya terbuka jika level sebelumnya sudah selesai
+        return IsLevelCompleted(levelNum - 1);
     }
 
     void StartGame()
@@ -249,6 +298,10 @@ public class Board : MonoBehaviour
         isProcessing = false;
 
         SaveHighScore();
+
+        // Simpan progress level yang berhasil diselesaikan di PlayerPrefs
+        PlayerPrefs.SetInt("LevelCompleted_" + currentLevel, 1);
+        PlayerPrefs.Save();
 
         levelCompletePanel.SetActive(true);
         gameUIPanel.SetActive(true);
