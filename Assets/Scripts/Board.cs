@@ -55,6 +55,9 @@ public class Board : MonoBehaviour
 
     void Start()
     {
+        // Paksa Board berada di (0,0,0) sejajar dengan posisi kamera agar posisi click 100% pas
+        transform.position = Vector3.zero;
+
         ConfigureCamera();
         ShowMainMenu();
     }
@@ -1020,6 +1023,17 @@ public class Board : MonoBehaviour
 
     void ConfigureCanvasScalers()
     {
+        // Temukan semua Canvas di dalam scene dan paksa menggunakan ScreenSpaceOverlay
+        // agar koordinat klik UI 100% presisi dengan kursor mouse/touch
+        Canvas[] canvases = FindObjectsOfType<Canvas>();
+        foreach (var canvas in canvases)
+        {
+            if (canvas != null)
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            }
+        }
+
         // Temukan semua CanvasScaler di dalam scene
         CanvasScaler[] scalers = FindObjectsOfType<CanvasScaler>();
         foreach (var scaler in scalers)
@@ -1058,6 +1072,14 @@ public class Board : MonoBehaviour
             rect.offsetMin = new Vector2(0f, 0f);
             rect.offsetMax = new Vector2(0f, 0f);
             rect.pivot = new Vector2(0.5f, 0.5f);
+        }
+
+        // Nonaktifkan raycastTarget pada background Image gameUIPanel
+        // agar tidak memblokir input klik pada tile permainan di belakangnya
+        Image panelImg = panel.GetComponent<Image>();
+        if (panelImg != null && panel == gameUIPanel)
+        {
+            panelImg.raycastTarget = false;
         }
 
         // Enforce stretch-stretch juga pada ScrollRect (Scroll View) di bawah panel ini
