@@ -39,14 +39,27 @@ public class Board : MonoBehaviour
     private bool isEndlessMode = false;
     private int currentLevel = 1;
     private int comboCount = 0;
+    private int lastScreenWidth = 0;
+    private int lastScreenHeight = 0;
+
+    void Awake()
+    {
+        ConfigureCanvasScalers();
+    }
 
     void Start()
     {
+        ConfigureCamera();
         ShowMainMenu();
     }
 
     void Update()
     {
+        if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
+        {
+            ConfigureCamera();
+        }
+
         if (!isGameStarted) return;
 
         timeLeft -= Time.deltaTime;
@@ -744,5 +757,49 @@ public class Board : MonoBehaviour
         }
 
         tiles = null;
+    }
+
+    void ConfigureCanvasScalers()
+    {
+        // Temukan semua CanvasScaler di dalam scene
+        UnityEngine.UI.CanvasScaler[] scalers = FindObjectsOfType<UnityEngine.UI.CanvasScaler>();
+        foreach (var scaler in scalers)
+        {
+            if (scaler != null)
+            {
+                scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                // Menggunakan resolusi referensi landscape standar 1920x1080
+                scaler.referenceResolution = new Vector2(1920, 1080);
+                scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                scaler.matchWidthOrHeight = 0.5f; // Ekuivalen seimbang antara lebar dan tinggi
+            }
+        }
+    }
+
+    void ConfigureCamera()
+    {
+        Camera mainCam = Camera.main;
+        if (mainCam == null) return;
+
+        // Pastikan kamera bernilai orthographic
+        mainCam.orthographic = true;
+
+        float aspect = (float)Screen.width / Screen.height;
+
+        // Tambahkan ruang horizontal & vertikal ekstra untuk padding dan UI
+        float targetWidth = width + 2f; 
+        float targetHeight = height + 4.5f; // Ruang ekstra vertikal untuk UI (skor, timer, level info)
+
+        float sizeForHeight = targetHeight / 2f;
+        float sizeForWidth = targetWidth / (2f * aspect);
+
+        // Pilih ukuran terbesar agar seluruh board dan padding UI tetap masuk layar
+        mainCam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth);
+
+        // Pastikan posisi kamera berada di tengah board (0, 0)
+        mainCam.transform.position = new Vector3(0, 0, -10);
+
+        lastScreenWidth = Screen.width;
+        lastScreenHeight = Screen.height;
     }
 }
