@@ -60,6 +60,7 @@ public class Board : MonoBehaviour
 
         ConfigureCamera();
         ShowMainMenu();
+        CreateResetButton();
     }
 
     void Update()
@@ -69,6 +70,14 @@ public class Board : MonoBehaviour
             ConfigureCamera();
             ConfigureCanvasScalers();
         }
+
+        // Hotkey reset progress untuk testing di Unity Editor
+        #if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ResetAllProgress();
+        }
+        #endif
 
         if (!isGameStarted) return;
 
@@ -1133,5 +1142,297 @@ public class Board : MonoBehaviour
 
         lastScreenWidth = Screen.width;
         lastScreenHeight = Screen.height;
+    }
+
+    // --- FITUR RESET PROGRESS DYNAMIC & RESPONSIVE ---
+
+    private void CreateResetButton()
+    {
+        if (levelSelectPanel == null) return;
+
+        // Cari apakah sudah ada tombol Reset di levelSelectPanel
+        if (levelSelectPanel.transform.Find("ResetProgressButton") != null) return;
+
+        // Ambil font & material dari scoreText agar seragam
+        TMP_FontAsset customFont = null;
+        Material customMaterial = null;
+        if (scoreText != null)
+        {
+            customFont = scoreText.font;
+            customMaterial = scoreText.fontSharedMaterial;
+        }
+
+        // Deteksi rasio layar untuk skala ukuran tombol yang pas
+        float aspect = (float)Screen.width / Screen.height;
+        float btnWidth = aspect < 1.0f ? 280f : 240f;
+        float btnHeight = aspect < 1.0f ? 80f : 70f;
+        float fontSize = aspect < 1.0f ? 30f : 22f;
+
+        // 1. Buat Game Object Tombol
+        GameObject btnObj = new GameObject("ResetProgressButton");
+        btnObj.transform.SetParent(levelSelectPanel.transform, false);
+
+        RectTransform rect = btnObj.AddComponent<RectTransform>();
+        // Posisikan di pojok kanan atas dengan anchor
+        rect.anchorMin = new Vector2(1f, 1f);
+        rect.anchorMax = new Vector2(1f, 1f);
+        rect.pivot = new Vector2(1f, 1f);
+        rect.anchoredPosition = new Vector2(-40f, -40f); // margin dari pojok kanan atas
+        rect.sizeDelta = new Vector2(btnWidth, btnHeight);
+
+        Image btnImg = btnObj.AddComponent<Image>();
+        btnImg.color = new Color(0.18f, 0.18f, 0.22f, 0.9f); // Dark background premium
+
+        // Outline merah halus untuk tombol reset
+        Outline outline = btnObj.AddComponent<Outline>();
+        outline.effectColor = new Color(0.9f, 0.3f, 0.3f, 0.4f);
+        outline.effectDistance = new Vector2(2f, 2f);
+
+        Button button = btnObj.AddComponent<Button>();
+        
+        // Atur efek transisi warna tombol
+        ColorBlock cb = button.colors;
+        cb.normalColor = new Color(0.18f, 0.18f, 0.22f, 0.9f);
+        cb.highlightedColor = new Color(0.25f, 0.2f, 0.25f, 1f);
+        cb.pressedColor = new Color(0.12f, 0.12f, 0.15f, 1f);
+        button.colors = cb;
+
+        // 2. Buat Teks Tombol
+        GameObject textObj = new GameObject("ButtonText");
+        textObj.transform.SetParent(btnObj.transform, false);
+
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        TextMeshProUGUI textMesh = textObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            textMesh.font = customFont;
+            textMesh.fontSharedMaterial = customMaterial;
+        }
+        textMesh.text = "Reset Progress";
+        textMesh.fontSize = fontSize;
+        textMesh.fontStyle = FontStyles.Bold;
+        textMesh.color = new Color(0.95f, 0.4f, 0.4f, 1f); // Warna teks merah soft premium
+        textMesh.alignment = TextAlignmentOptions.Center;
+
+        // 3. Tambahkan Event Listener
+        button.onClick.AddListener(ShowResetConfirmationPopup);
+    }
+
+    public void ShowResetConfirmationPopup()
+    {
+        // Cegah munculnya popup ganda jika popup sudah terbuka!
+        if (GameObject.Find("ResetConfirmOverlay") != null)
+        {
+            return;
+        }
+
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas == null)
+        {
+            ResetAllProgress();
+            return;
+        }
+
+        TMP_FontAsset customFont = null;
+        Material customMaterial = null;
+        if (scoreText != null)
+        {
+            customFont = scoreText.font;
+            customMaterial = scoreText.fontSharedMaterial;
+        }
+
+        // Deteksi rasio layar untuk skala ukuran popup yang pas
+        float aspect = (float)Screen.width / Screen.height;
+        float cardWidth = aspect < 1.0f ? 750f : 650f;
+        float cardHeight = aspect < 1.0f ? 450f : 380f;
+        float titleFontSize = aspect < 1.0f ? 46f : 36f;
+        float descFontSize = aspect < 1.0f ? 32f : 22f;
+        float buttonFontSize = aspect < 1.0f ? 32f : 22f;
+
+        // 1. Overlay Background (Blokir input di belakang)
+        GameObject overlayObj = new GameObject("ResetConfirmOverlay");
+        overlayObj.transform.SetParent(canvas.transform, false);
+        
+        RectTransform overlayRect = overlayObj.AddComponent<RectTransform>();
+        overlayRect.anchorMin = Vector2.zero;
+        overlayRect.anchorMax = Vector2.one;
+        overlayRect.offsetMin = Vector2.zero;
+        overlayRect.offsetMax = Vector2.zero;
+
+        Image overlayImg = overlayObj.AddComponent<Image>();
+        overlayImg.color = new Color(0f, 0f, 0f, 0.8f); // Hitam transparan premium pekat
+
+        CanvasGroup overlayGroup = overlayObj.AddComponent<CanvasGroup>();
+        overlayGroup.blocksRaycasts = true;
+
+        // 2. Pop-up Card Box
+        GameObject cardObj = new GameObject("ResetConfirmCard");
+        cardObj.transform.SetParent(overlayObj.transform, false);
+        
+        RectTransform cardRect = cardObj.AddComponent<RectTransform>();
+        cardRect.anchorMin = new Vector2(0.5f, 0.5f);
+        cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+        cardRect.sizeDelta = new Vector2(cardWidth, cardHeight);
+        cardRect.pivot = new Vector2(0.5f, 0.5f);
+
+        Image cardImg = cardObj.AddComponent<Image>();
+        cardImg.color = new Color(0.12f, 0.12f, 0.16f, 1f); // Dark theme premium
+        
+        Outline cardOutline = cardObj.AddComponent<Outline>();
+        cardOutline.effectColor = new Color(0.9f, 0.3f, 0.3f, 0.6f); // Glow merah soft (peringatan)
+        cardOutline.effectDistance = new Vector2(4f, 4f);
+
+        // 3. Judul Pop-up ("Reset Progress?")
+        GameObject titleObj = new GameObject("TitleText");
+        titleObj.transform.SetParent(cardObj.transform, false);
+        RectTransform titleRect = titleObj.AddComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0f, 0.7f);
+        titleRect.anchorMax = new Vector2(1f, 0.95f);
+        titleRect.offsetMin = new Vector2(20f, 0f);
+        titleRect.offsetMax = new Vector2(-20f, 0f);
+
+        TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            titleText.font = customFont;
+            titleText.fontSharedMaterial = customMaterial;
+        }
+        titleText.text = "Reset Progress?";
+        titleText.fontSize = titleFontSize;
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.color = new Color(0.95f, 0.35f, 0.35f, 1f); // Merah warning
+        titleText.alignment = TextAlignmentOptions.Center;
+
+        // 4. Deskripsi Pertanyaan
+        GameObject descObj = new GameObject("DescText");
+        descObj.transform.SetParent(cardObj.transform, false);
+        RectTransform descRect = descObj.AddComponent<RectTransform>();
+        descRect.anchorMin = new Vector2(0f, 0.35f);
+        descRect.anchorMax = new Vector2(1f, 0.65f);
+        descRect.offsetMin = new Vector2(30f, 0f);
+        descRect.offsetMax = new Vector2(-30f, 0f);
+
+        TextMeshProUGUI descText = descObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            descText.font = customFont;
+            descText.fontSharedMaterial = customMaterial;
+        }
+        descText.text = "Semua data level dan High Score akan dihapus secara permanen. Anda harus mengulang dari Level 1. Lanjutkan?";
+        descText.fontSize = descFontSize;
+        descText.color = new Color(0.85f, 0.85f, 0.9f, 1f);
+        descText.alignment = TextAlignmentOptions.Center;
+
+        // 5. Tombol Reset (Konfirmasi)
+        GameObject resetBtnObj = new GameObject("ConfirmResetButton");
+        resetBtnObj.transform.SetParent(cardObj.transform, false);
+        RectTransform resetBtnRect = resetBtnObj.AddComponent<RectTransform>();
+        resetBtnRect.anchorMin = new Vector2(0.08f, 0.08f);
+        resetBtnRect.anchorMax = new Vector2(0.48f, 0.28f);
+        resetBtnRect.offsetMin = Vector2.zero;
+        resetBtnRect.offsetMax = Vector2.zero;
+
+        Image resetBtnImg = resetBtnObj.AddComponent<Image>();
+        resetBtnImg.color = new Color(0.85f, 0.3f, 0.3f, 1f); // Merah terang premium
+        
+        Button resetBtn = resetBtnObj.AddComponent<Button>();
+        
+        GameObject resetTextObj = new GameObject("ResetText");
+        resetTextObj.transform.SetParent(resetBtnObj.transform, false);
+        RectTransform resetTextRect = resetTextObj.AddComponent<RectTransform>();
+        resetTextRect.anchorMin = Vector2.zero;
+        resetTextRect.anchorMax = Vector2.one;
+        resetTextRect.offsetMin = Vector2.zero;
+        resetTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI resetText = resetTextObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            resetText.font = customFont;
+            resetText.fontSharedMaterial = customMaterial;
+        }
+        resetText.text = "Reset";
+        resetText.fontSize = buttonFontSize;
+        resetText.fontStyle = FontStyles.Bold;
+        resetText.color = Color.white;
+        resetText.alignment = TextAlignmentOptions.Center;
+
+        resetBtn.onClick.AddListener(() => {
+            Destroy(overlayObj);
+            ResetAllProgress();
+        });
+
+        // 6. Tombol Batal (Cancel)
+        GameObject cancelBtnObj = new GameObject("CancelResetButton");
+        cancelBtnObj.transform.SetParent(cardObj.transform, false);
+        RectTransform cancelBtnRect = cancelBtnObj.AddComponent<RectTransform>();
+        cancelBtnRect.anchorMin = new Vector2(0.52f, 0.08f);
+        cancelBtnRect.anchorMax = new Vector2(0.92f, 0.28f);
+        cancelBtnRect.offsetMin = Vector2.zero;
+        cancelBtnRect.offsetMax = Vector2.zero;
+
+        Image cancelBtnImg = cancelBtnObj.AddComponent<Image>();
+        cancelBtnImg.color = new Color(0.3f, 0.3f, 0.35f, 1f);
+        
+        Button cancelBtn = cancelBtnObj.AddComponent<Button>();
+        
+        GameObject cancelTextObj = new GameObject("CancelText");
+        cancelTextObj.transform.SetParent(cancelBtnObj.transform, false);
+        RectTransform cancelTextRect = cancelTextObj.AddComponent<RectTransform>();
+        cancelTextRect.anchorMin = Vector2.zero;
+        cancelTextRect.anchorMax = Vector2.one;
+        cancelTextRect.offsetMin = Vector2.zero;
+        cancelTextRect.offsetMax = Vector2.zero;
+        
+        TextMeshProUGUI cancelText = cancelTextObj.AddComponent<TextMeshProUGUI>();
+        if (customFont != null)
+        {
+            cancelText.font = customFont;
+            cancelText.fontSharedMaterial = customMaterial;
+        }
+        cancelText.text = "Batal";
+        cancelText.fontSize = buttonFontSize;
+        cancelText.fontStyle = FontStyles.Bold;
+        cancelText.color = Color.white;
+        cancelText.alignment = TextAlignmentOptions.Center;
+
+        cancelBtn.onClick.AddListener(() => {
+            Destroy(overlayObj);
+        });
+
+        // Animasi masuk scale yang halus (Pop-up Effect)
+        cardObj.transform.localScale = Vector3.zero;
+        StartCoroutine(AnimateCardScaleUp(cardObj.transform));
+    }
+
+    public void ResetAllProgress()
+    {
+        // Hapus semua data progress level 1 sampai 10
+        for (int i = 1; i <= 10; i++)
+        {
+            PlayerPrefs.DeleteKey("LevelCompleted_" + i);
+        }
+        PlayerPrefs.DeleteKey("HighScore");
+        PlayerPrefs.Save();
+
+        // Refresh status visual semua Level Button UI
+        LevelButtonUI[] levelButtons = FindObjectsOfType<LevelButtonUI>(true);
+        foreach (LevelButtonUI btn in levelButtons)
+        {
+            if (btn != null)
+            {
+                btn.UpdateUIState();
+            }
+        }
+
+        // Refresh UI skor
+        UpdateUI();
+
+        Debug.Log("Semua progress level berhasil direset!");
     }
 }
