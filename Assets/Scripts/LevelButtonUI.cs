@@ -27,6 +27,13 @@ public class LevelButtonUI : MonoBehaviour
     {
         button = GetComponent<Button>();
         board = FindObjectOfType<Board>();
+
+        // Registrasi listener secara otomatis dan programmatic agar 100% terjamin bekerja
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(OnClickStartLevel);
+        }
     }
 
     void OnEnable()
