@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class Board : MonoBehaviour
@@ -45,6 +46,11 @@ public class Board : MonoBehaviour
     void Awake()
     {
         ConfigureCanvasScalers();
+        MakePanelResponsive(mainMenuPanel);
+        MakePanelResponsive(levelSelectPanel);
+        MakePanelResponsive(gameUIPanel);
+        MakePanelResponsive(gameOverPanel);
+        MakePanelResponsive(levelCompletePanel);
     }
 
     void Start()
@@ -58,6 +64,7 @@ public class Board : MonoBehaviour
         if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
         {
             ConfigureCamera();
+            ConfigureCanvasScalers();
         }
 
         if (!isGameStarted) return;
@@ -815,16 +822,57 @@ public class Board : MonoBehaviour
     void ConfigureCanvasScalers()
     {
         // Temukan semua CanvasScaler di dalam scene
-        UnityEngine.UI.CanvasScaler[] scalers = FindObjectsOfType<UnityEngine.UI.CanvasScaler>();
+        CanvasScaler[] scalers = FindObjectsOfType<CanvasScaler>();
         foreach (var scaler in scalers)
         {
             if (scaler != null)
             {
-                scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                // Menggunakan resolusi referensi landscape standar 1920x1080
-                scaler.referenceResolution = new Vector2(1920, 1080);
-                scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-                scaler.matchWidthOrHeight = 0.5f; // Ekuivalen seimbang antara lebar dan tinggi
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                
+                // Deteksi rasio layar untuk mengatur orientasi UI dinamis
+                float aspect = (float)Screen.width / Screen.height;
+                if (aspect < 1.0f) // Portrait (HP/Mobile)
+                {
+                    scaler.referenceResolution = new Vector2(1080, 1920);
+                    scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                    scaler.matchWidthOrHeight = 0f; // Match width agar UI tidak terpotong secara horizontal
+                }
+                else // Landscape (Desktop/WebGL)
+                {
+                    scaler.referenceResolution = new Vector2(1920, 1080);
+                    scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                    scaler.matchWidthOrHeight = 1f; // Match height agar UI terisi vertikal penuh
+                }
+            }
+        }
+    }
+
+    void MakePanelResponsive(GameObject panel)
+    {
+        if (panel == null) return;
+        
+        RectTransform rect = panel.GetComponent<RectTransform>();
+        if (rect != null)
+        {
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.offsetMin = new Vector2(0f, 0f);
+            rect.offsetMax = new Vector2(0f, 0f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+        }
+
+        // Enforce stretch-stretch juga pada ScrollRect (Scroll View) di bawah panel ini
+        ScrollRect scrollRect = panel.GetComponentInChildren<ScrollRect>(true);
+        if (scrollRect != null)
+        {
+            RectTransform scrollRectTransform = scrollRect.GetComponent<RectTransform>();
+            if (scrollRectTransform != null)
+            {
+                scrollRectTransform.anchorMin = new Vector2(0f, 0f);
+                scrollRectTransform.anchorMax = new Vector2(1f, 1f);
+                scrollRectTransform.offsetMin = new Vector2(0f, 0f);
+                scrollRectTransform.offsetMax = new Vector2(0f, 0f);
+                scrollRectTransform.pivot = new Vector2(0.5f, 0.5f);
             }
         }
     }
